@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Productory</title>
+<meta name="description" content="Carefully chosen products for every need, delivered to your door.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!--
+=====================================================================
+ PRODUCTORY — single-file store (HTML + CSS + JS)
+ Quick customization: search for "CONFIG" in the <script> at the bottom.
+ Everything you normally change (brand name, taglines, currency,
+ shipping, products, payment methods, Formspree endpoint, contact
+ details, terms) lives in that one block.
+ See README.md for the full step-by-step guide.
+=====================================================================
+-->
+
+<style>
+/* ===================== 1. DESIGN TOKENS (COLORS & FONTS) ===================== */
+:root{
+  --bg:#F3F6F4;        /* page background: soft mist        */
+  --ink:#1F3A35;       /* main text + dark surfaces: pine   */
+  --sage:#A8C3B5;      /* soft accents, borders, tiles      */
+  --butter:#F2DFA7;    /* warm highlight: buttons, badges   */
+  --white:#FFFFFF;
+  --muted:#5E756F;
+  --line:rgba(31,58,53,.12);
+  --radius:22px;
+  --shadow:0 18px 40px -22px rgba(31,58,53,.35);
+  --display:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --body:'DM Sans','Segoe UI',system-ui,sans-serif;
+  box-sizing:border-box;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:calc(90px + env(safe-area-inset-top,0px))}
+body{font-family:var(--body);background:var(--bg);color:var(--ink);line-height:1.6;overflow-x:hidden}
+body.locked{overflow:hidden}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea{font-family:inherit;font-size:1rem;color:var(--ink)}
+:focus-visible{outline:3px solid var(--sage);outline-offset:3px;border-radius:8px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+
+/* ===================== 2. WELCOME / INTRO ANIMATION ===================== */
+#intro{position:fixed;inset:0;z-index:1000;background:var(--ink);display:grid;place-items:center;
+  transition:transform 1s cubic-bezier(.77,0,.18,1);}
+#intro.hide{transform:translateY(-100%)}
+.intro-inner{text-align:center;color:var(--bg);padding:0 16px}
+.intro-mark{width:74px;height:74px;margin:0 auto 26px;position:relative}
+.intro-mark svg{width:100%;height:100%}
+.intro-mark .ring{stroke:var(--sage);stroke-width:3;fill:none;stroke-dasharray:220;stroke-dashoffset:220;animation:draw 1.3s .2s ease forwards}
+.intro-mark .tick{stroke:var(--butter);stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:60;stroke-dashoffset:60;animation:draw .6s 1.1s ease forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.intro-word{font-family:var(--display);font-weight:800;font-size:clamp(2.2rem,9vw,4.6rem);letter-spacing:-.02em;display:flex;justify-content:center;gap:.02em}
+.intro-word span{display:inline-block;opacity:0;transform:translateY(60%) rotate(6deg);animation:letter .7s cubic-bezier(.2,.8,.2,1) forwards}
+.intro-word .gap{width:.3em}
+@keyframes letter{to{opacity:1;transform:none}}
+.intro-sub{margin-top:14px;font-size:1.05rem;color:var(--sage);opacity:0;animation:fade .8s 1.7s forwards}
+.intro-bar{width:160px;height:3px;background:rgba(255,255,255,.12);border-radius:3px;margin:28px auto 0;overflow:hidden}
+.intro-bar i{display:block;height:100%;width:0;background:var(--butter);animation:load 2.4s .2s ease forwards}
+@keyframes load{to{width:100%}}
+@keyframes fade{to{opacity:1}}
+
+/* ===================== ANNOUNCEMENT BAR ===================== */
+.announce{background:var(--ink);color:var(--butter);text-align:center;font-size:.92rem;font-weight:500;padding:10px 16px;padding-top:calc(10px + env(safe-area-inset-top,0px));display:none;overflow:hidden}
+.announce.on{display:block}
+.announce span{display:inline-block;transition:opacity .5s,transform .5s}
+.announce span.out{opacity:0;transform:translateY(-8px)}
+.thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .6s}
+.card:hover .thumb img{transform:scale(1.06)}
+.mini{overflow:hidden}
+.mini img{width:100%;height:100%;object-fit:cover}
+
+/* ===================== 3. HEADER ===================== */
+header{position:sticky;top:0;z-index:100;background:rgba(243,246,244,.85);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:74px;gap:16px}
+.logo{font-family:var(--display);font-weight:800;font-size:1.55rem;letter-spacing:-.02em;text-decoration:none;color:var(--ink);display:flex;align-items:center;gap:10px}
+.logo i{width:30px;height:30px;border-radius:50%;background:var(--ink);display:grid;place-items:center;flex:none}
+.logo i::after{content:"";width:10px;height:6px;border-left:3px solid var(--butter);border-bottom:3px solid var(--butter);transform:rotate(-45deg) translate(1px,-1px)}
+nav.links{display:flex;gap:6px}
+nav.links a{text-decoration:none;color:var(--ink);font-weight:500;padding:9px 16px;border-radius:999px;position:relative;transition:background .3s,color .3s}
+nav.links a:hover{background:var(--sage);}
+.tools{display:flex;align-items:center;gap:10px}
+.icon-btn{width:46px;height:46px;border-radius:50%;background:var(--white);border:1px solid var(--line);display:grid;place-items:center;position:relative;transition:transform .3s,background .3s,box-shadow .3s;flex:none}
+.icon-btn:hover{transform:translateY(-2px) scale(1.06);background:var(--butter);box-shadow:var(--shadow)}
+.icon-btn svg{width:21px;height:21px;stroke:var(--ink);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.badge{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;border-radius:999px;background:var(--ink);color:var(--white);font-size:.72rem;font-weight:600;display:grid;place-items:center;padding:0 5px;transform:scale(0);transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
+.badge.on{transform:scale(1)}
+.badge.bump{animation:bump .4s}
+@keyframes bump{50%{transform:scale(1.5)}}
+.search{position:relative;display:flex;align-items:center}
+.search input{width:0;opacity:0;padding:0;height:46px;border:1px solid transparent;border-radius:999px;background:var(--white);transition:width .45s cubic-bezier(.3,.9,.3,1),opacity .3s,padding .3s,margin .3s;margin-right:0}
+.search.open input{width:200px;opacity:1;padding:0 18px;margin-right:8px;border-color:var(--line)}
+.menu-toggle{display:none}
+
+/* ===================== 4. HERO / TAGLINE ===================== */
+.hero{position:relative;padding:76px 0 40px;text-align:center;overflow:hidden}
+.blob{position:absolute;border-radius:50%;filter:blur(50px);opacity:.55;z-index:0;animation:float 12s ease-in-out infinite}
+.blob.a{width:340px;height:340px;background:var(--sage);top:-100px;left:-80px}
+.blob.b{width:280px;height:280px;background:var(--butter);bottom:-90px;right:-40px;animation-delay:-5s}
+@keyframes float{50%{transform:translate(30px,26px) scale(1.08)}}
+.hero .wrap{position:relative;z-index:1}
+.hero h1{font-family:var(--display);font-weight:800;font-size:clamp(2.4rem,7vw,4.9rem);line-height:1.02;letter-spacing:-.03em;max-width:14ch;margin:0 auto}
+.hero p{margin:22px auto 0;max-width:34ch;font-size:1.2rem;color:var(--muted)}
+.hero h1 .line{display:block;overflow:hidden;padding-bottom:.06em}
+.hero h1 .line span{display:block;transform:translateY(110%);transition:transform 1s cubic-bezier(.2,.8,.2,1)}
+.loaded .hero h1 .line span{transform:none}
+.loaded .hero h1 .line:nth-child(2) span{transition-delay:.12s}
+.hero p,.hero .cta{opacity:0;transform:translateY(16px);transition:opacity .9s .5s,transform .9s .5s}
+.hero .cta{transition-delay:.7s}
+.loaded .hero p,.loaded .hero .cta{opacity:1;transform:none}
+.cta{margin-top:30px}
+
+/* ===================== 5. BUTTONS ===================== */
+.btn{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 26px;border-radius:999px;font-weight:600;font-size:.98rem;transition:transform .3s,box-shadow .3s,background .3s,color .3s;text-decoration:none}
+.btn:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.btn:active{transform:translateY(0) scale(.97)}
+.btn.dark{background:var(--ink);color:var(--white)}
+.btn.dark:hover{background:#2c5149}
+.btn.soft{background:var(--white);border:1.5px solid var(--ink);color:var(--ink)}
+.btn.soft:hover{background:var(--sage)}
+.btn.gold{background:var(--butter);color:var(--ink)}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.6;pointer-events:none}
+.btn .ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.45);transform:scale(0);animation:ripple .6s linear;pointer-events:none}
+.btn.soft .ripple,.btn.gold .ripple{background:rgba(31,58,53,.18)}
+@keyframes ripple{to{transform:scale(4);opacity:0}}
+
+/* ===================== 6. PRODUCTS SECTION ===================== */
+.section{padding:60px 0}
+.section-title{font-family:var(--display);font-weight:700;font-size:clamp(1.7rem,4vw,2.4rem);letter-spacing:-.02em;margin-bottom:22px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:26px}
+.chip{padding:8px 16px;border-radius:999px;background:var(--white);border:1px solid var(--line);font-weight:500;font-size:.9rem;transition:background .3s,transform .3s}
+.chip:hover{background:var(--sage);transform:translateY(-2px)}
+.chip.on{background:var(--ink);color:var(--white);border-color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
+.card{background:var(--white);border-radius:var(--radius);border:1px solid var(--line);overflow:hidden;display:flex;flex-direction:column;
+  transition:transform .45s cubic-bezier(.2,.8,.2,1),box-shadow .45s,opacity .6s;
+  opacity:0;transform:translateY(34px)}
+.card.in{opacity:1;transform:none}
+.card.in:hover{transform:translateY(-8px);box-shadow:0 28px 50px -26px rgba(31,58,53,.45)}
+.card.gone{display:none}
+.thumb{aspect-ratio:1/0.92;display:grid;place-items:center;position:relative;overflow:hidden}
+.thumb svg{width:64%;height:auto;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.card:hover .thumb svg{transform:scale(1.09) rotate(-2deg)}
+.tag{position:absolute;top:14px;left:14px;background:var(--white);border-radius:999px;font-size:.78rem;font-weight:600;padding:4px 12px;z-index:1}
+.card-body{padding:20px;display:flex;flex-direction:column;gap:6px;flex:1}
+.card h3{font-family:var(--display);font-size:1.15rem;line-height:1.25}
+.card .desc{font-size:.92rem;color:var(--muted);flex:1}
+.price{font-family:var(--display);font-weight:700;font-size:1.3rem;margin:8px 0 6px}
+.price s{font-family:var(--body);font-weight:400;font-size:.9rem;color:var(--muted);margin-left:6px}
+.actions{display:grid;gap:8px}
+.actions .btn{padding:12px 16px;font-size:.92rem}
+.empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:40px 0;display:none}
+
+/* ===================== 7. CONTACT + TERMS ===================== */
+.panel{background:var(--ink);color:var(--bg);border-radius:32px;padding:48px;display:grid;grid-template-columns:1fr 1fr;gap:40px}
+.panel h2{font-family:var(--display);font-size:2rem;letter-spacing:-.02em;margin-bottom:12px}
+.panel p{color:var(--sage)}
+.panel a{color:var(--butter);text-decoration:none;font-weight:600}
+.contact-list{display:grid;gap:14px;align-content:start}
+.contact-list div{background:rgba(255,255,255,.07);border-radius:16px;padding:16px 20px;transition:background .3s,transform .3s;overflow-wrap:anywhere}
+.contact-list div:hover{background:rgba(255,255,255,.12);transform:translateX(6px)}
+.contact-list small{display:block;color:var(--sage)}
+.terms{background:var(--white);border:1px solid var(--line);border-radius:28px;padding:40px}
+.terms h3{font-family:var(--display);margin:20px 0 6px;font-size:1.1rem}
+.terms h3:first-of-type{margin-top:0}
+.terms p{color:var(--muted);max-width:70ch}
+footer{padding:36px 0 46px;text-align:center;color:var(--muted);font-size:.92rem}
+
+/* ===================== 8. CART DRAWER ===================== */
+.overlay{position:fixed;inset:0;background:rgba(20,36,32,.5);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .4s;z-index:300}
+.overlay.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(420px,100%);background:var(--bg);z-index:310;transform:translateX(105%);transition:transform .5s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.drawer.on{transform:none}
+.drawer-head,.drawer-foot{padding:22px 24px;display:flex;justify-content:space-between;align-items:center}
+.drawer-head{border-bottom:1px solid var(--line)}
+.drawer-head h3{font-family:var(--display);font-size:1.4rem}
+.drawer-body{flex:1;overflow:auto;padding:16px 24px}
+.drawer-foot{flex-direction:column;gap:14px;border-top:1px solid var(--line);align-items:stretch}
+.row{display:flex;justify-content:space-between;font-weight:600;gap:12px}
+.line-item{display:grid;grid-template-columns:64px 1fr auto;gap:14px;align-items:center;padding:12px 0;animation:slide .4s both}
+@keyframes slide{from{opacity:0;transform:translateX(24px)}}
+.line-item .mini{width:64px;height:64px;border-radius:16px;display:grid;place-items:center}
+.line-item .mini svg{width:70%}
+.line-item h4{font-size:.95rem;line-height:1.3}
+.qty{display:inline-flex;align-items:center;gap:10px;margin-top:6px;background:var(--white);border-radius:999px;padding:2px 6px;border:1px solid var(--line)}
+.qty button{width:26px;height:26px;border-radius:50%;font-size:1.1rem;transition:background .2s}
+.qty button:hover{background:var(--butter)}
+.remove{font-size:.8rem;color:var(--muted);text-decoration:underline}
+.cart-empty{text-align:center;color:var(--muted);padding:60px 0}
+.ship-note{font-size:.85rem;color:var(--muted)}
+
+/* ===================== 9. CHECKOUT & THANK YOU ===================== */
+.modal{position:fixed;inset:0;z-index:400;display:grid;place-items:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .4s}
+.modal.on{opacity:1;pointer-events:auto}
+.sheet{background:var(--bg);border-radius:30px;width:min(640px,100%);max-height:94vh;overflow:auto;padding:34px;position:relative;transform:translateY(40px) scale(.96);transition:transform .55s cubic-bezier(.2,.9,.3,1.1)}
+.modal.on .sheet{transform:none}
+.close{position:absolute;top:18px;right:18px}
+.steps{display:flex;gap:8px;margin-bottom:24px;padding-right:54px}
+.steps i{flex:1;height:5px;border-radius:5px;background:var(--line);overflow:hidden;position:relative}
+.steps i::after{content:"";position:absolute;inset:0;background:var(--ink);transform:translateX(-101%);transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.steps i.done::after{transform:none}
+.sheet h2{font-family:var(--display);font-size:1.7rem;letter-spacing:-.02em}
+.sheet .sub{color:var(--muted);margin:4px 0 22px}
+.step{display:none}
+.step.on{display:block;animation:pop .55s both}
+@keyframes pop{from{opacity:0;transform:translateY(18px)}}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field.full{grid-column:1/-1}
+.field label{font-size:.85rem;font-weight:600}
+.field input,.field textarea{padding:13px 16px;border-radius:14px;border:1.5px solid var(--line);background:var(--white);transition:border-color .3s,box-shadow .3s}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 4px rgba(168,195,181,.5)}
+.field input.bad{border-color:#c0564b}
+.summary{background:var(--white);border-radius:18px;padding:16px 18px;margin:20px 0;border:1px solid var(--line)}
+.summary .row{font-weight:500;font-size:.95rem;padding:3px 0}
+.summary .total{font-weight:700;font-size:1.1rem;border-top:1px dashed var(--line);margin-top:8px;padding-top:10px}
+.err{color:#b04a3f;font-size:.9rem;margin-top:10px;min-height:1.2em}
+.pay{display:grid;gap:14px;margin-top:6px}
+.pay button{display:flex;align-items:center;gap:16px;text-align:left;background:var(--white);border:1.5px solid var(--line);border-radius:20px;padding:18px 20px;transition:transform .3s,border-color .3s,box-shadow .3s}
+.pay button:hover{transform:translateY(-3px);border-color:var(--ink);box-shadow:var(--shadow)}
+.pay button[disabled]{opacity:.6;pointer-events:none}
+.pay .pi{width:48px;height:48px;border-radius:14px;background:var(--butter);display:grid;place-items:center;font-family:var(--display);font-weight:800;flex:none;font-size:1.3rem}
+.pay b{display:block;font-size:1.05rem}
+.pay small{color:var(--muted)}
+.safe{margin-top:18px;font-size:.85rem;color:var(--muted);text-align:center}
+.thanks{text-align:center;padding:10px 0}
+.thanks p{color:var(--muted);margin:0 auto 18px;max-width:44ch;overflow-wrap:anywhere}
+.thanks .btn{margin-top:6px}
+.demo-note{background:var(--butter);border-radius:14px;padding:10px 14px;font-size:.85rem;color:var(--ink);margin:0 auto 18px;max-width:44ch}
+.check{width:96px;height:96px;margin:0 auto 20px}
+.check circle{fill:var(--sage);opacity:.45}
+.check .c{fill:none;stroke:var(--ink);stroke-width:3;stroke-dasharray:290;stroke-dashoffset:290}
+.check .t{fill:none;stroke:var(--ink);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:60;stroke-dashoffset:60}
+.step.on .check .c{animation:draw 1s .1s forwards}
+.step.on .check .t{animation:draw .6s .9s forwards}
+.order-id{display:inline-block;margin:14px 0 24px;background:var(--butter);border-radius:999px;padding:6px 18px;font-weight:600}
+
+/* ===================== 10. TOAST ===================== */
+.toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));transform:translate(-50%,160px);background:var(--ink);color:var(--white);padding:14px 24px;border-radius:999px;z-index:500;transition:transform .5s cubic-bezier(.2,.9,.3,1.2);font-weight:500;max-width:calc(100% - 32px);text-align:center}
+.toast.on{transform:translate(-50%,0)}
+
+/* ===================== 11. RESPONSIVE ===================== */
+@media(max-width:1020px){.grid{grid-template-columns:repeat(2,1fr)}.panel{grid-template-columns:1fr;padding:34px}}
+@media(max-width:720px){
+  nav.links{position:absolute;top:calc(74px + env(safe-area-inset-top,0px));left:0;right:0;background:var(--bg);flex-direction:column;padding:12px 24px 20px;border-bottom:1px solid var(--line);transform:translateY(-12px);opacity:0;pointer-events:none;transition:.35s}
+  nav.links.on{transform:none;opacity:1;pointer-events:auto}
+  .menu-toggle{display:grid}
+  .search.open input{width:130px}
+  .fields{grid-template-columns:1fr}
+}
+@media(max-width:480px){.grid{grid-template-columns:1fr}.sheet{padding:26px 20px}.terms{padding:28px 22px}.panel{padding:28px 22px}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+
+<body>
+
+<!-- ===================== INTRO / WELCOME ANIMATION ===================== -->
+<div id="intro" aria-hidden="true">
+  <div class="intro-inner">
+    <div class="intro-mark">
+      <svg viewBox="0 0 80 80"><circle class="ring" cx="40" cy="40" r="35"/><path class="tick" d="M25 41l11 11 20-23"/></svg>
+    </div>
+    <div class="intro-word" id="introWord"></div>
+    <div class="intro-sub" id="introSub">Discover. Choose. Enjoy.</div>
+    <div class="intro-bar"><i></i></div>
+  </div>
+</div>
+
+<!-- ===================== ANNOUNCEMENT BAR ===================== -->
+<div class="announce" id="announce"><span id="announceText"></span></div>
+
+<!-- ===================== HEADER ===================== -->
+<header>
+  <div class="wrap nav">
+    <a href="#top" class="logo"><i></i><span data-brand>Productory</span></a>
+
+    <nav class="links" id="links" aria-label="Main">
+      <a href="#products">All Products</a>
+      <a href="#contact">Contact</a>
+      <a href="#terms">Terms &amp; Services</a>
+    </nav>
+
+    <div class="tools">
+      <div class="search" id="search">
+        <input type="search" id="searchInput" placeholder="Search products" aria-label="Search products">
+        <button class="icon-btn" id="searchBtn" aria-label="Search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        </button>
+      </div>
+      <button class="icon-btn" id="cartBtn" aria-label="Open cart">
+        <svg viewBox="0 0 24 24"><path d="M3 4h2l2.4 11.2a2 2 0 002 1.6h7.7a2 2 0 002-1.5L21 8H6"/><circle cx="10" cy="20.5" r="1"/><circle cx="17" cy="20.5" r="1"/></svg>
+        <span class="badge" id="cartCount">0</span>
+      </button>
+      <button class="icon-btn menu-toggle" id="menuBtn" aria-label="Menu">
+        <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ===================== HERO / TAGLINE ===================== -->
+<section class="hero">
+  <div class="blob a"></div><div class="blob b"></div>
+  <div class="wrap">
+    <h1><span class="line"><span id="tag1">Better picks.</span></span><span class="line"><span id="tag2">Better days.</span></span></h1>
+    <p id="subtitle">Carefully chosen products for every need, delivered to your door.</p>
+    <div class="cta"><a href="#products" class="btn dark">Shop products</a></div>
+  </div>
+</section>
+
+<!-- ===================== PRODUCTS SECTION ===================== -->
+<section class="section" id="products">
+  <div class="wrap">
+    <h2 class="section-title">All Products</h2>
+    <div class="chips" id="chips"></div>
+    <div class="grid" id="grid"></div>
+    <p class="empty" id="empty">No products match your search. Try a different word.</p>
+  </div>
+</section>
+
+<!-- ===================== CONTACT ===================== -->
+<section class="section" id="contact">
+  <div class="wrap">
+    <div class="panel">
+      <div>
+        <h2>Contact us</h2>
+        <p id="contactIntro">Questions about an order or a product? Send us a message and we will get back to you.</p>
+      </div>
+      <div class="contact-list" id="contactList"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== TERMS & SERVICES ===================== -->
+<section class="section" id="terms">
+  <div class="wrap">
+    <h2 class="section-title">Terms &amp; Services</h2>
+    <div class="terms" id="termsBox"></div>
+  </div>
+</section>
+
+</main>
+
+<footer><div class="wrap">&copy; <span id="year"></span> <span data-brand>Productory</span>. All rights reserved.</div></footer>
+
+<!-- ===================== CART DRAWER ===================== -->
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer" aria-label="Shopping cart" aria-hidden="true">
+  <div class="drawer-head">
+    <h3>Your cart</h3>
+    <button class="icon-btn" id="drawerClose" aria-label="Close cart"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="drawer-body" id="cartBody"></div>
+  <div class="drawer-foot" id="cartFoot">
+    <div class="row"><span>Subtotal</span><span id="cartSub">0</span></div>
+    <div class="ship-note" id="shipNote"></div>
+    <button class="btn dark block" id="checkoutBtn">Checkout</button>
+  </div>
+</aside>
+
+<!-- ===================== CHECKOUT MODAL ===================== -->
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Checkout">
+  <div class="sheet">
+    <button class="icon-btn close" id="modalClose" aria-label="Close checkout"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="steps" id="steps"><i></i><i></i><i></i></div>
+
+    <!-- Step 1: delivery details -->
+    <div class="step" data-step="0">
+      <h2>Delivery details</h2>
+      <p class="sub">Tell us where to send your order.</p>
+      <div class="fields">
+        <div class="field"><label for="fName">Full name</label><input id="fName" autocomplete="name"></div>
+        <div class="field"><label for="fEmail">Email</label><input id="fEmail" type="email" autocomplete="email"></div>
+        <div class="field"><label for="fPhone">Phone / WhatsApp</label><input id="fPhone" type="tel" autocomplete="tel"></div>
+        <div class="field"><label for="fCountry">Country</label><input id="fCountry" list="countryList" autocomplete="country-name"></div>
+        <div class="field full"><label for="fAddress">Street address</label><input id="fAddress" autocomplete="street-address"></div>
+        <div class="field"><label for="fCity">City</label><input id="fCity" autocomplete="address-level2"></div>
+        <div class="field"><label for="fPostal">Postal / ZIP code</label><input id="fPostal" autocomplete="postal-code"></div>
+        <div class="field full"><label for="fNotes">Order notes (optional)</label><textarea id="fNotes" rows="2" style="resize:vertical"></textarea></div>
+      </div>
+      <datalist id="countryList"></datalist>
+      <p class="err" id="err0"></p>
+      <button class="btn dark block" id="toPay">Continue to payment</button>
+    </div>
+
+    <!-- Step 2: review + payment method -->
+    <div class="step" data-step="1">
+      <h2>Payment</h2>
+      <p class="sub">Review your order and choose how to pay.</p>
+      <div class="summary" id="paySummary"></div>
+      <div class="pay" id="payList"></div>
+      <p class="err" id="err1"></p>
+      <button class="btn soft block" id="backBtn" style="margin-top:8px">Back to details</button>
+      <p class="safe">Your details are only used to process this order.</p>
+    </div>
+
+    <!-- Step 3: thank you -->
+    <div class="step" data-step="2">
+      <div class="thanks" id="thanksBox"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ===================================================================== -->
+<!-- ===================== CONFIG — EDIT THIS BLOCK ======================= -->
+<!-- ===================================================================== -->
+<script>
+const CONFIG = {
+
+  /* ---------- [A] BRAND & TEXT ---------- */
+  brand: {
+    name: 'Productory',                                   // shown everywhere (logo, intro, footer, page title)
+    tagline1: 'Better picks.',                            // big headline, line 1
+    tagline2: 'Better days.',                             // big headline, line 2
+    subtitle: 'Carefully chosen products for every need, delivered to your door.',
+    introLine: 'Discover. Choose. Enjoy.',                // small line under the name in the welcome animation
+    metaDescription: 'Carefully chosen products for every need, delivered to your door.'
+  },
+
+  /* ---------- [B] STORE: CURRENCY, SHIPPING, COUNTRIES ---------- */
+  store: {
+    currencyCode: 'USD',        // USD, EUR, GBP, AED, PKR, INR, CAD, AUD ... (any ISO 4217 code)
+    locale: 'en-US',            // how numbers look: en-US, en-GB, de-DE, en-IN, ar-AE ...
+    shippingFlat: 4.99,         // flat shipping fee per order (0 = free shipping always)
+    freeShippingOver: 50,       // subtotal at/above this = free shipping (0 = never free)
+    taxPercent: 0,              // extra tax/VAT % added at checkout (0 = none)
+    shipTo: [],                 // [] = ship worldwide. Or e.g. ['United States','Canada'] to limit countries
+    orderPrefix: 'PRD'          // order numbers look like PRD-K3X9QA
+  },
+
+  /* ---------- [C] ORDERS: where orders are sent ---------- */
+  orders: {
+    formspreeEndpoint: ''       // e.g. 'https://formspree.io/f/xxxxxxxx'  (empty = preview/demo mode)
+  },
+
+  /* ---------- [D] PAYMENT METHODS ----------
+     type 'link'     -> customer gets a "Complete payment" button (Stripe / PayPal / Razorpay / any payment link)
+     type 'offline'  -> no online payment (cash on delivery, bank transfer). Shows your message.
+     type 'whatsapp' -> customer gets a "Send order on WhatsApp" button
+     Set enabled:false to hide a method.                                         */
+  payments: [
+    { id:'online',   enabled:true,  type:'link',     badge:'💳', label:'Pay online',        note:'Card, wallet or bank through a secure link',
+      url:'',       // <-- paste your Stripe / PayPal / Razorpay payment link here
+      message:'Thank you! Tap the button below to complete your payment. We start processing as soon as it is confirmed.' },
+
+    { id:'cod',      enabled:true,  type:'offline',  badge:'💵', label:'Cash on delivery',  note:'Pay when your order arrives',
+      message:'Thank you! Your order is confirmed. Please keep the exact amount ready for delivery.' },
+
+    { id:'bank',     enabled:false, type:'offline',  badge:'🏦', label:'Bank transfer',     note:'Send the amount to our bank account',
+      message:'Please transfer the total to: YOUR BANK NAME, Account name: YOUR NAME, Account no / IBAN: 0000 0000 0000. Use your order ID as the reference.' },
+
+    { id:'whatsapp', enabled:false, type:'whatsapp', badge:'💬', label:'Order on WhatsApp', note:'Confirm and pay with us in chat',
+      number:'',     // <-- WhatsApp number with country code, digits only, e.g. 15551234567
+      message:'Thank you! Tap the button below to send your order details to us on WhatsApp.' }
+  ],
+
+  /* ---------- [E] ANNOUNCEMENT BAR (rotating messages, empty [] = hidden) ---------- */
+  announcements: [
+    'Free shipping on orders over $50',
+    'Secure checkout, friendly support',
+    'New products added every week'
+  ],
+
+  /* ---------- [F] CONTACT DETAILS ---------- */
+  contact: {
+    intro: 'Questions about an order or a product? Send us a message and we will get back to you.',
+    items: [
+      { label:'Email',   value:'hello@yourdomain.com', href:'mailto:hello@yourdomain.com' },
+      { label:'Phone',   value:'+00 000 000 0000',     href:'tel:+000000000000' },
+      { label:'Hours',   value:'Mon–Sat, 9:00–18:00' },
+      { label:'Address', value:'Your street, your city, your country' }
+    ]
+  },
+
+  /* ---------- [G] PRODUCTS ----------
+     id        unique short id (no spaces)              sku     your code / supplier code (goes into the order email)
+     name      product name                              category  groups products into filter chips
+     price     selling price (number, no symbol)         oldPrice  optional crossed-out price (or 0)
+     desc      one short line                            badge     optional small tag on the image ('New', 'Sale' ...)
+     icon      placeholder drawing: bottle lamp bag phone charger cup headphones box
+     color     background of the image tile (hex)
+     image     optional photo URL (https://...) — replaces the drawing
+     payLink   optional payment link just for this product (used by "Buy now" for a single item)
+     Copy one whole { ... }, block, paste it below, change the values. Delete a block to remove a product. */
+  products: [
+    { id:'p1', sku:'PRD-001', name:'Insulated Bottle',      category:'Home & Kitchen', price:19.99, oldPrice:24.99, badge:'Sale', desc:'Keeps drinks hot or cold for hours.',            icon:'bottle',     color:'#DDEBE3', image:'', payLink:'' },
+    { id:'p2', sku:'PRD-002', name:'Desk Lamp',             category:'Home & Kitchen', price:29.90, oldPrice:0,     badge:'',     desc:'Soft, adjustable light for work and study.',     icon:'lamp',       color:'#F6EBC4', image:'', payLink:'' },
+    { id:'p3', sku:'PRD-003', name:'Travel Organizer',      category:'Lifestyle',      price:14.50, oldPrice:0,     badge:'New',  desc:'Keeps your essentials tidy on every trip.',      icon:'bag',        color:'#E7EFE9', image:'', payLink:'' },
+    { id:'p4', sku:'PRD-004', name:'Phone Stand',           category:'Gadgets',        price:9.99,  oldPrice:12.99, badge:'',     desc:'Sturdy, foldable stand for any phone.',          icon:'phone',      color:'#F6EBC4', image:'', payLink:'' },
+    { id:'p5', sku:'PRD-005', name:'Wireless Charger',      category:'Gadgets',        price:24.00, oldPrice:0,     badge:'',     desc:'Slim pad that charges without cables.',          icon:'charger',    color:'#DDEBE3', image:'', payLink:'' },
+    { id:'p6', sku:'PRD-006', name:'Ceramic Mug',           category:'Home & Kitchen', price:11.00, oldPrice:0,     badge:'',     desc:'Comfortable grip, dishwasher safe.',             icon:'cup',        color:'#E7EFE9', image:'', payLink:'' },
+    { id:'p7', sku:'PRD-007', name:'Wireless Headphones',   category:'Gadgets',        price:39.99, oldPrice:49.99, badge:'Sale', desc:'Clear sound and long battery life.',             icon:'headphones', color:'#DDEBE3', image:'', payLink:'' },
+    { id:'p8', sku:'PRD-008', name:'Gift Box Set',          category:'Lifestyle',      price:32.00, oldPrice:0,     badge:'',     desc:'A ready-to-give set for any occasion.',          icon:'box',        color:'#F6EBC4', image:'', payLink:'' }
+  ],
+
+  /* ---------- [H] TERMS & SERVICES (edit text, add/remove sections) ---------- */
+  terms: [
+    { title:'Orders & payment',   text:'By placing an order you confirm that the details you give are correct. Prices are shown in the store currency. An order is confirmed once payment is received or, for cash on delivery, once we contact you.' },
+    { title:'Shipping & delivery', text:'We ship to the countries shown at checkout. Delivery times depend on your location and are estimates, not guarantees. You will be told about any delay as soon as we know.' },
+    { title:'Returns & refunds',   text:'If your item arrives damaged, faulty or not as described, contact us within 7 days of delivery with your order ID and a photo. We will offer a replacement or refund.' },
+    { title:'Privacy',             text:'We only use your name, contact and delivery details to process and deliver your order and to answer your questions. We do not sell your information.' },
+    { title:'Contact',             text:'For anything about these terms, use the contact details above.' }
+  ]
+};
+</script>
+
+<!-- ===================================================================== -->
+<!-- ===================== STORE ENGINE (no need to edit) ================= -->
+<!-- ===================================================================== -->
+<script>
+(function(){
+"use strict";
+const C = CONFIG;
+const $  = s => document.querySelector(s);
+const $$ = s => Array.prototype.slice.call(document.querySelectorAll(s));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+/* ---------- money ---------- */
+let fmt;
+try { fmt = new Intl.NumberFormat(C.store.locale, {style:'currency', currency:C.store.currencyCode}); }
+catch(e){ fmt = { format: n => C.store.currencyCode + ' ' + Number(n).toFixed(2) }; }
+const money = n => fmt.format(n);
+
+/* ---------- icons for product placeholders ---------- */
+const ICONS = {
+  bottle:'<rect x="24" y="8" width="16" height="9" rx="2"/><path d="M22 17h20v35a4 4 0 01-4 4H26a4 4 0 01-4-4z"/><path d="M22 30h20"/>',
+  lamp:'<path d="M20 10h24l6 20H14z"/><path d="M32 30v20"/><path d="M22 54h20"/>',
+  bag:'<path d="M14 22h36l-3 32H17z"/><path d="M24 22v-4a8 8 0 0116 0v4"/>',
+  phone:'<rect x="20" y="8" width="24" height="48" rx="5"/><path d="M28 48h8"/>',
+  charger:'<circle cx="32" cy="32" r="21"/><path d="M35 17l-9 17h9l-5 13"/>',
+  cup:'<path d="M14 20h30v20a12 12 0 01-12 12h-6A12 12 0 0114 40z"/><path d="M44 26h4a6 6 0 010 12h-4"/>',
+  headphones:'<path d="M14 40v-8a18 18 0 0136 0v8"/><rect x="10" y="38" width="10" height="16" rx="4"/><rect x="44" y="38" width="10" height="16" rx="4"/>',
+  box:'<path d="M8 22l24-12 24 12v22L32 56 8 44z"/><path d="M8 22l24 12 24-12M32 34v22"/>'
+};
+function iconSVG(name){
+  return '<svg viewBox="0 0 64 64" fill="rgba(255,255,255,.7)" stroke="#1F3A35" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">' + (ICONS[name] || ICONS.box) + '</svg>';
+}
+const visual = p => p.image ? '<img src="' + esc(p.image) + '" alt="' + esc(p.name) + '" loading="lazy">' : iconSVG(p.icon);
+
+/* ---------- apply brand / text from CONFIG ---------- */
+const B = C.brand;
+document.title = B.name;
+const md = document.querySelector('meta[name="description"]'); if (md) md.setAttribute('content', B.metaDescription || B.subtitle);
+$$('[data-brand]').forEach(el => el.textContent = B.name);
+$('#tag1').textContent = B.tagline1;
+$('#tag2').textContent = B.tagline2;
+$('#subtitle').textContent = B.subtitle;
+$('#introSub').textContent = B.introLine;
+$('#year').textContent = new Date().getFullYear();
+
+/* intro word, letter by letter */
+(function(){
+  const box = $('#introWord'); let html = '';
+  Array.from(B.name).forEach((ch, i) => {
+    html += ch === ' ' ? '<span class="gap"></span>' : '<span style="animation-delay:' + (0.25 + i * 0.07).toFixed(2) + 's">' + esc(ch) + '</span>';
+  });
+  box.innerHTML = html;
+})();
+
+/* contact + terms */
+$('#contactIntro').textContent = C.contact.intro;
+$('#contactList').innerHTML = C.contact.items.map(it => {
+  const v = it.href ? '<a href="' + esc(it.href) + '">' + esc(it.value) + '</a>' : esc(it.value);
+  return '<div><small>' + esc(it.label) + '</small>' + v + '</div>';
+}).join('');
+$('#termsBox').innerHTML = C.terms.map(t => '<h3>' + esc(t.title) + '</h3><p>' + esc(t.text) + '</p>').join('');
+
+/* countries datalist */
+const ALL_COUNTRIES = 'United States|Canada|United Kingdom|Ireland|Australia|New Zealand|Germany|France|Spain|Italy|Netherlands|Belgium|Sweden|Norway|Denmark|Finland|Switzerland|Austria|Portugal|Poland|Turkey|United Arab Emirates|Saudi Arabia|Qatar|Kuwait|Oman|Bahrain|Egypt|South Africa|Nigeria|Kenya|India|Pakistan|Bangladesh|Sri Lanka|Nepal|Singapore|Malaysia|Indonesia|Philippines|Thailand|Vietnam|Japan|South Korea|China|Hong Kong|Brazil|Mexico|Argentina|Chile|Colombia'.split('|');
+const countryList = (C.store.shipTo && C.store.shipTo.length) ? C.store.shipTo : ALL_COUNTRIES;
+$('#countryList').innerHTML = countryList.map(c => '<option value="' + esc(c) + '">').join('');
+
+/* ---------- announcement bar ---------- */
+(function(){
+  const list = C.announcements || []; if (!list.length) return;
+  const bar = $('#announce'), txt = $('#announceText'); let i = 0;
+  txt.textContent = list[0]; bar.classList.add('on');
+  if (list.length > 1) setInterval(() => {
+    txt.classList.add('out');
+    setTimeout(() => { i = (i + 1) % list.length; txt.textContent = list[i]; txt.classList.remove('out'); }, 500);
+  }, 4200);
+})();
+
+/* ---------- cart state ---------- */
+const KEY = 'productory_cart_v1';
+let cart = [];
+try { cart = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch(e){ cart = []; }
+cart = (Array.isArray(cart) ? cart : []).filter(l => l && C.products.some(p => p.id === l.id) && l.qty > 0);
+const saveCart = () => { try { localStorage.setItem(KEY, JSON.stringify(cart)); } catch(e){} };
+const prod = id => C.products.find(p => p.id === id);
+const count = () => cart.reduce((n, l) => n + l.qty, 0);
+
+function totals(){
+  const S = C.store;
+  const sub = cart.reduce((s, l) => s + prod(l.id).price * l.qty, 0);
+  const ship = !cart.length ? 0 : (S.freeShippingOver > 0 && sub >= S.freeShippingOver ? 0 : S.shippingFlat);
+  const tax = sub * (S.taxPercent || 0) / 100;
+  return { sub, ship, tax, total: sub + ship + tax };
+}
+
+/* ---------- toast ---------- */
+let toastT;
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2200);
+}
+
+/* ---------- overlays ---------- */
+const overlay = $('#overlay'), drawer = $('#drawer'), modal = $('#modal');
+function refreshLock(){
+  const open = drawer.classList.contains('on') || modal.classList.contains('on');
+  overlay.classList.toggle('on', open); document.body.classList.toggle('locked', open);
+}
+function openDrawer(){ renderCart(); drawer.classList.add('on'); drawer.setAttribute('aria-hidden','false'); refreshLock(); }
+function closeDrawer(){ drawer.classList.remove('on'); drawer.setAttribute('aria-hidden','true'); refreshLock(); }
+function openModal(){ modal.classList.add('on'); refreshLock(); }
+function closeModal(){ modal.classList.remove('on'); refreshLock(); }
+
+/* ---------- products grid ---------- */
+const state = { q:'', cat:'All' };
+const grid = $('#grid');
+let io = null;
+if ('IntersectionObserver' in window){
+  io = new IntersectionObserver(entries => entries.forEach(e => {
+    if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); const el = e.target; setTimeout(() => { el.style.transitionDelay = ''; }, 1000); }
+  }), { threshold: .12 });
+}
+function cardHTML(p){
+  const tag = p.badge || p.category;
+  return '<article class="card" data-id="' + esc(p.id) + '">' +
+    '<div class="thumb" style="background:' + esc(p.color || '#DDEBE3') + '">' + visual(p) + (tag ? '<span class="tag">' + esc(tag) + '</span>' : '') + '</div>' +
+    '<div class="card-body"><h3>' + esc(p.name) + '</h3><p class="desc">' + esc(p.desc) + '</p>' +
+    '<div class="price">' + money(p.price) + (p.oldPrice > p.price ? '<s>' + money(p.oldPrice) + '</s>' : '') + '</div>' +
+    '<div class="actions"><button class="btn dark" data-add="' + esc(p.id) + '">Add to cart</button>' +
+    '<button class="btn soft" data-buy="' + esc(p.id) + '">Buy now</button></div></div></article>';
+}
+function renderGrid(){
+  const q = state.q.trim().toLowerCase();
+  const list = C.products.filter(p => (state.cat === 'All' || p.category === state.cat) &&
+    (!q || (p.name + ' ' + p.desc + ' ' + p.category + ' ' + p.sku).toLowerCase().indexOf(q) > -1));
+  grid.innerHTML = list.map(cardHTML).join('') + '';
+  $('#empty').style.display = list.length ? 'none' : 'block';
+  $$('.card').forEach((c, i) => {
+    if (io){ c.style.transitionDelay = ((i % 4) * 70) + 'ms'; io.observe(c); } else c.classList.add('in');
+  });
+}
+function renderChips(){
+  const cats = ['All'].concat(C.products.map(p => p.category).filter((c, i, a) => c && a.indexOf(c) === i));
+  const box = $('#chips');
+  if (cats.length < 3){ box.style.display = 'none'; return; }
+  box.innerHTML = cats.map(c => '<button class="chip' + (c === state.cat ? ' on' : '') + '" data-cat="' + esc(c) + '">' + esc(c) + '</button>').join('');
+}
+$('#chips').addEventListener('click', e => {
+  const b = e.target.closest('[data-cat]'); if (!b) return;
+  state.cat = b.getAttribute('data-cat'); renderChips(); renderGrid();
+});
+grid.addEventListener('click', e => {
+  const a = e.target.closest('[data-add]'), b = e.target.closest('[data-buy]');
+  if (a){ addToCart(a.getAttribute('data-add')); toast('Added to cart'); }
+  if (b){ addToCart(b.getAttribute('data-buy')); startCheckout(); }
+});
+
+/* ---------- cart actions ---------- */
+function updateBadge(bump){
+  const n = count(), el = $('#cartCount');
+  el.textContent = n; el.classList.toggle('on', n > 0);
+  if (bump){ el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+}
+function addToCart(id){
+  const l = cart.find(x => x.id === id);
+  if (l) l.qty++; else cart.push({ id: id, qty: 1 });
+  saveCart(); updateBadge(true);
+  if (drawer.classList.contains('on')) renderCart();
+}
+function renderCart(){
+  const body = $('#cartBody'), foot = $('#cartFoot');
+  if (!cart.length){
+    body.innerHTML = '<div class="cart-empty">Your cart is empty.<br>Add a product to get started.</div>';
+    foot.style.display = 'none'; return;
+  }
+  foot.style.display = 'flex';
+  body.innerHTML = cart.map(l => {
+    const p = prod(l.id);
+    return '<div class="line-item"><div class="mini" style="background:' + esc(p.color || '#DDEBE3') + '">' + visual(p) + '</div>' +
+      '<div><h4>' + esc(p.name) + '</h4><div class="qty"><button data-dec="' + esc(p.id) + '" aria-label="Decrease quantity">&minus;</button><span>' + l.qty + '</span><button data-inc="' + esc(p.id) + '" aria-label="Increase quantity">+</button></div></div>' +
+      '<div style="text-align:right"><div class="row" style="justify-content:flex-end">' + money(p.price * l.qty) + '</div><button class="remove" data-rm="' + esc(p.id) + '">Remove</button></div></div>';
+  }).join('');
+  const t = totals();
+  $('#cartSub').textContent = money(t.sub);
+  const S = C.store;
+  $('#shipNote').textContent = S.freeShippingOver > 0
+    ? (t.ship === 0 ? 'You get free shipping.' : 'Add ' + money(S.freeShippingOver - t.sub) + ' more for free shipping.')
+    : (S.shippingFlat > 0 ? 'Shipping is calculated at checkout.' : 'Shipping is free.');
+}
+$('#cartBody').addEventListener('click', e => {
+  const inc = e.target.closest('[data-inc]'), dec = e.target.closest('[data-dec]'), rm = e.target.closest('[data-rm]');
+  if (inc){ addToCart(inc.getAttribute('data-inc')); }
+  if (dec){ const l = cart.find(x => x.id === dec.getAttribute('data-dec')); if (l){ l.qty--; if (l.qty <= 0) cart = cart.filter(x => x !== l); saveCart(); updateBadge(); renderCart(); } }
+  if (rm){ cart = cart.filter(x => x.id !== rm.getAttribute('data-rm')); saveCart(); updateBadge(); renderCart(); }
+});
+$('#cartBtn').addEventListener('click', openDrawer);
+$('#drawerClose').addEventListener('click', closeDrawer);
+overlay.addEventListener('click', () => { closeDrawer(); if (modal.classList.contains('on') && !orderDone) closeModal(); });
+
+/* ---------- header behaviour ---------- */
+$('#menuBtn').addEventListener('click', () => $('#links').classList.toggle('on'));
+$$('#links a').forEach(a => a.addEventListener('click', () => $('#links').classList.remove('on')));
+$('#searchBtn').addEventListener('click', () => {
+  const s = $('#search'); s.classList.toggle('open');
+  if (s.classList.contains('open')) $('#searchInput').focus();
+  else { $('#searchInput').value = ''; state.q = ''; renderGrid(); }
+});
+$('#searchInput').addEventListener('input', e => {
+  state.q = e.target.value; renderGrid();
+  if (state.q) document.getElementById('products').scrollIntoView({behavior:'smooth'});
+});
+
+/* ---------- button ripple ---------- */
+document.addEventListener('click', e => {
+  const b = e.target.closest('.btn'); if (!b) return;
+  const r = b.getBoundingClientRect(), d = Math.max(r.width, r.height);
+  const s = document.createElement('span'); s.className = 'ripple';
+  s.style.width = s.style.height = d + 'px';
+  s.style.left = (e.clientX - r.left - d / 2) + 'px'; s.style.top = (e.clientY - r.top - d / 2) + 'px';
+  b.appendChild(s); setTimeout(() => s.remove(), 650);
+});
+
+/* ---------- checkout ---------- */
+let orderDone = false;
+function goStep(n){
+  $$('.step').forEach(s => s.classList.toggle('on', +s.getAttribute('data-step') === n));
+  $$('#steps i').forEach((i, k) => i.classList.toggle('done', k <= n));
+  $('.sheet').scrollTop = 0;
+}
+function startCheckout(){
+  if (!cart.length){ toast('Your cart is empty'); return; }
+  closeDrawer(); orderDone = false;
+  $('#err0').textContent = ''; $('#err1').textContent = '';
+  goStep(0); openModal();
+}
+$('#checkoutBtn').addEventListener('click', startCheckout);
+$('#modalClose').addEventListener('click', () => { closeModal(); });
+modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape'){ closeDrawer(); closeModal(); $('#links').classList.remove('on'); } });
+
+const val = id => $('#' + id).value.trim();
+function validateDetails(){
+  const need = ['fName','fEmail','fPhone','fAddress','fCity','fPostal','fCountry'];
+  let ok = true;
+  need.forEach(id => { const bad = !val(id); $('#' + id).classList.toggle('bad', bad); if (bad) ok = false; });
+  if (!ok) return 'Please fill in all the required fields.';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val('fEmail'))){ $('#fEmail').classList.add('bad'); return 'Please enter a valid email address.'; }
+  const list = C.store.shipTo || [];
+  if (list.length && !list.some(c => c.toLowerCase() === val('fCountry').toLowerCase())){
+    $('#fCountry').classList.add('bad'); return 'Sorry, we currently ship only to: ' + list.join(', ') + '.';
+  }
+  return '';
+}
+$('#toPay').addEventListener('click', () => {
+  const msg = validateDetails(); $('#err0').textContent = msg;
+  if (msg) return;
+  renderPayStep(); goStep(1);
+});
+$('#backBtn').addEventListener('click', () => goStep(0));
+
+function renderPayStep(){
+  const t = totals();
+  $('#paySummary').innerHTML = cart.map(l => {
+    const p = prod(l.id); return '<div class="row"><span>' + l.qty + ' &times; ' + esc(p.name) + '</span><span>' + money(p.price * l.qty) + '</span></div>';
+  }).join('') +
+  '<div class="row"><span>Shipping</span><span>' + (t.ship === 0 ? 'Free' : money(t.ship)) + '</span></div>' +
+  (t.tax > 0 ? '<div class="row"><span>Tax (' + C.store.taxPercent + '%)</span><span>' + money(t.tax) + '</span></div>' : '') +
+  '<div class="row total"><span>Total</span><span>' + money(t.total) + '</span></div>';
+  const methods = C.payments.filter(m => m.enabled);
+  $('#payList').innerHTML = methods.length ? methods.map(m =>
+    '<button data-pay="' + esc(m.id) + '"><span class="pi">' + esc(m.badge || '') + '</span><span><b>' + esc(m.label) + '</b><small>' + esc(m.note || '') + '</small></span></button>'
+  ).join('') : '<p class="err">No payment method is enabled. Enable one in CONFIG.</p>';
+}
+$('#payList').addEventListener('click', e => {
+  const b = e.target.closest('[data-pay]'); if (b) placeOrder(b.getAttribute('data-pay'));
+});
+
+function makeOrderId(){
+  return (C.store.orderPrefix || 'ORD') + '-' + (Date.now().toString(36) + Math.random().toString(36).slice(2, 4)).slice(-6).toUpperCase();
+}
+function itemsText(){
+  return cart.map(l => { const p = prod(l.id); return l.qty + ' x ' + p.name + ' [' + (p.sku || p.id) + '] = ' + money(p.price * l.qty); }).join('\n');
+}
+async function placeOrder(methodId){
+  const m = C.payments.find(x => x.id === methodId); if (!m) return;
+  const t = totals(), id = makeOrderId(), endpoint = (C.orders.formspreeEndpoint || '').trim();
+  const buttons = $$('#payList button'); buttons.forEach(b => b.disabled = true);
+  $('#err1').textContent = '';
+
+  const payload = {
+    _subject: 'New order ' + id + ' — ' + C.brand.name,
+    order_id: id, payment_method: m.label,
+    name: val('fName'), email: val('fEmail'), _replyto: val('fEmail'), phone: val('fPhone'),
+    address: val('fAddress'), city: val('fCity'), postal_code: val('fPostal'), country: val('fCountry'), notes: val('fNotes'),
+    items: itemsText(), subtotal: money(t.sub), shipping: money(t.ship), tax: money(t.tax), total: money(t.total),
+    currency: C.store.currencyCode
+  };
+
+  if (endpoint){
+    try {
+      const r = await fetch(endpoint, { method:'POST', headers:{ 'Content-Type':'application/json', 'Accept':'application/json' }, body: JSON.stringify(payload) });
+      if (!r.ok) throw new Error('bad status');
+    } catch(err){
+      $('#err1').textContent = 'We could not send your order. Check your connection and try again.';
+      buttons.forEach(b => b.disabled = false); return;
+    }
+  }
+
+  /* build the thank-you screen */
+  let action = '';
+  if (m.type === 'link'){
+    const single = cart.length === 1 && prod(cart[0].id).payLink;
+    const url = (single && cart[0].qty === 1) ? prod(cart[0].id).payLink : m.url;
+    if (url) action = '<a class="btn gold block" href="' + esc(url) + '" target="_blank" rel="noopener">Complete payment (' + money(t.total) + ')</a>';
+  }
+  if (m.type === 'whatsapp' && m.number){
+    const text = 'Hello! I placed order ' + id + '.\n' + itemsText() + '\nTotal: ' + money(t.total) + '\nName: ' + payload.name;
+    action = '<a class="btn gold block" href="https://wa.me/' + esc(String(m.number).replace(/\D/g,'')) + '?text=' + encodeURIComponent(text) + '" target="_blank" rel="noopener">Send order on WhatsApp</a>';
+  }
+  const msg = (m.type === 'link' && !action) ? 'Thank you! We will email you a secure payment link shortly.' : m.message;
+
+  $('#thanksBox').innerHTML =
+    '<svg class="check" viewBox="0 0 96 96"><circle cx="48" cy="48" r="44"/><circle class="c" cx="48" cy="48" r="44"/><path class="t" d="M30 50l13 13 24-28"/></svg>' +
+    '<h2>Thank you, ' + esc(payload.name.split(' ')[0]) + '!</h2>' +
+    '<div class="order-id">Order ' + esc(id) + '</div>' +
+    (endpoint ? '' : '<div class="demo-note">Preview mode: this order was not sent. Add your Formspree endpoint in CONFIG to receive real orders.</div>') +
+    '<p>' + esc(msg) + '</p>' + action +
+    '<button class="btn soft block" id="doneBtn">Continue shopping</button>';
+  $('#doneBtn').addEventListener('click', closeModal);
+
+  orderDone = true; cart = []; saveCart(); updateBadge(); renderCart();
+  goStep(2);
+  buttons.forEach(b => b.disabled = false);
+}
+
+/* ---------- start ---------- */
+renderChips(); renderGrid(); updateBadge(); renderCart();
+function reveal(){
+  const intro = $('#intro'); intro.classList.add('hide');
+  document.body.classList.add('loaded');
+  setTimeout(() => { intro.style.display = 'none'; }, 1100);
+}
+window.addEventListener('load', () => setTimeout(reveal, 3000));
+setTimeout(() => { if (!document.body.classList.contains('loaded')) reveal(); }, 5200);
+})();
+</script>
+</body>
+</html>
